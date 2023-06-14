@@ -20,6 +20,7 @@ def menu_items(request):
         category_name = request.query_params.get('category')
         to_price = request.query_params.get('to_price')
         search = request.query_params.get('search')
+        ordering = request.query_params.get('ordering')
 
         # >> Loading items on the basis of query_params
         if category_name:
@@ -32,6 +33,11 @@ def menu_items(request):
         if search:
             # We can place an 'i' before the '__contains" or "--istartswith" for case sensitivity
             items = items.filter(title__contains=search)
+
+        if ordering:
+            # Spliting the ordering value if it contains more than one criteria e.g ordering=price,title
+            ordering_fields = ordering.split(",")
+            items = items.order_by(*ordering_fields)
 
         # >> We pass context when we are using HyperlinkedModelSerializer to display related models as serializers
         serialized_item = MenuItemSerializer(
