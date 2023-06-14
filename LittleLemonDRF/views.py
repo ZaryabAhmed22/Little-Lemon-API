@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage
+from rest_framework import viewsets
 # Create your views here.
 ###################### FUNCTIONS BASED VIRES ####################
 
@@ -86,12 +87,12 @@ class CategoriesView(generics.ListCreateAPIView):
 # >>  The least a generic view requires for functioning properly is a serializer_class and queryset
 
 
-class MenuItemsView(generics.ListCreateAPIView):
+class MenuItemsView(generics.ListCreateAPIView, ):
     # throttle_classes = [AnonRateThrottle, UserRateThrottle]
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
     ordering_fields = ["price", "inventory"]
-    search_fields = ["title"]
+    search_fields = ['title', 'category__title']
 
 
 # >> The generic view RetrieveUpdateDestroy has everything to create a new model item and delete a model item from the database
