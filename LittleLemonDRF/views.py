@@ -10,13 +10,16 @@ from django.shortcuts import get_object_or_404
 ###################### FUNCTIONS BASED VIRES ####################
 
 
+@api_view()
 def menu_items(request):
-    items = MenuItem.objects.all()
+    # Loading the related models in a single query
+    items = MenuItem.objects.select_related('category').all()
     serialized_item = MenuItemSerializer(items, many=True)
     # return Response(items.values())
     return Response(serialized_item.data)
 
 
+@api_view()
 def single_menu_item(request, id):
     # item = MenuItem.objects.get(pk=id)
     item = get_object_or_404(MenuItem, pk=id)

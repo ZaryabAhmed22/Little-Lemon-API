@@ -22,7 +22,13 @@ class CategorySerializer (serializers.ModelSerializer):
 
 class MenuItemSerializer(serializers.ModelSerializer):
     category_id = serializers.IntegerField(write_only=True)
+
+    # >> Relationship serializer.
+    # >> This will display the category object inside the menu object
     category = CategorySerializer(read_only=True)
+
+    # >> This will only display the string representatin of the related model
+    # category = serializers.StringRelatedField()
 
     # Specifyinf a method as a serializer field
     price_after_tax = serializers.SerializerMethodField(
