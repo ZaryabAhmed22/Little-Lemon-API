@@ -5,6 +5,7 @@ from decimal import Decimal
 ################ SIMPLE SERIALIZER #################
 
 
+# >> While using a simple Serializer calss, you have to manually set every field presnet in the model we have to serialize.
 class MenuItemSerializerSimple(serializers.Serializer):
     id = serializers.IntegerField()
     title = serializers.CharField(max_length=255)

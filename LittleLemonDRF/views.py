@@ -13,8 +13,21 @@ from django.shortcuts import get_object_or_404
 @api_view(['GET', 'POST'])
 def menu_items(request):
     if request.method == "GET":
-        # Loading the related models in a single query
+        # >> Loading the related models in a single query
         items = MenuItem.objects.select_related('category').all()
+
+        # >> Fetching the query params from the url to implement filtering
+        category_name = request.query_params.get('category')
+        to_price = request.query_params.get('to_price')
+
+        # >> Loading items on the basis of query_params
+        if category_name:
+            # Using double underscores in case of related model 'category__title'
+            items = items.filter(category__title=category_name)
+        elif to_price:
+            # __lte is a field lookup. There are man other field lookups but in this case it means lower than equal to
+            items = items.filter(price__lte=to_price)
+
         # >> We pass context when we are using HyperlinkedModelSerializer to display related models as serializers
         serialized_item = MenuItemSerializer(
             items, many=True, context={'request': request})
