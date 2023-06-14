@@ -20,14 +20,15 @@ class CategorySerializer (serializers.ModelSerializer):
         fields = ['id', 'slug', 'title']
 
 
-# Adding HyperLinkedModelSerializer to display related models as hyperlinks
+# Adding HyperLinkedModelSerializer to display related models as hyperlinks, but then we have comment out the category field as for now it is for diplaying the realted object
 class MenuItemSerializer(serializers.HyperlinkedModelSerializer):
+    # We are making this write_only because we don;t want to display it on GET requests
     category_id = serializers.IntegerField(write_only=True)
 
     # >> Relationship serializer: Either we can add a new field and set it to the serializer of the related field. or set depth =1 as a field to display all relations nested in the object
 
-    # 1 >> This will display the category object inside the menu object
-    # category = CategorySerializer(read_only=True)
+    # 1 >> This will display the category object inside the menu object. Making it read only to avoid errors
+    category = CategorySerializer(read_only=True)
 
     # >> This will only display the string representatin of the related model
     # category = serializers.StringRelatedField()
