@@ -47,6 +47,7 @@ def menu_items(request):
             items = paginator.page(number=page)
         except:
             items = []
+
         # >> We pass context when we are using HyperlinkedModelSerializer to display related models as serializers
         serialized_item = MenuItemSerializer(
             items, many=True, context={'request': request})
