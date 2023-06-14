@@ -16,9 +16,10 @@ def menu_items(request):
         # >> Loading the related models in a single query
         items = MenuItem.objects.select_related('category').all()
 
-        # >> Fetching the query params from the url to implement filtering
+        # >> Fetching the query params from the url to implement filtering and searching
         category_name = request.query_params.get('category')
         to_price = request.query_params.get('to_price')
+        search = request.query_params.get('search')
 
         # >> Loading items on the basis of query_params
         if category_name:
@@ -27,6 +28,10 @@ def menu_items(request):
         elif to_price:
             # __lte is a field lookup. There are man other field lookups but in this case it means lower than equal to
             items = items.filter(price__lte=to_price)
+
+        if search:
+            # We can place an 'i' before the '__contains" or "--istartswith" for case sensitivity
+            items = items.filter(title__contains=search)
 
         # >> We pass context when we are using HyperlinkedModelSerializer to display related models as serializers
         serialized_item = MenuItemSerializer(
