@@ -10,11 +10,13 @@ from django.shortcuts import get_object_or_404
 ###################### FUNCTIONS BASED VIRES ####################
 
 
-@api_view()
+@api_view(['GET', 'POST'])
 def menu_items(request):
     # Loading the related models in a single query
     items = MenuItem.objects.select_related('category').all()
-    serialized_item = MenuItemSerializer(items, many=True)
+    # >> We pass context when we are using HyperlinkedModelSerializer to display related models as serializers
+    serialized_item = MenuItemSerializer(
+        items, many=True, context={'request': request})
     # return Response(items.values())
     return Response(serialized_item.data)
 
@@ -27,7 +29,15 @@ def single_menu_item(request, id):
     return Response(serialized_item.data)
 
 
+@api_view()
+def category_detail(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    serialized_category = CategorySerializer(category)
+    return Response(serialized_category.data)
+
 ####################### CLASS BASED VIEWS #####################
+
+
 class CategoriesView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer

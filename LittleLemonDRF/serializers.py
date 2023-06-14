@@ -17,18 +17,23 @@ class MenuItemSerializerSimple(serializers.Serializer):
 class CategorySerializer (serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'title']
+        fields = ['id', 'slug', 'title']
 
 
-class MenuItemSerializer(serializers.ModelSerializer):
+# Adding HyperLinkedModelSerializer to display related models as hyperlinks
+class MenuItemSerializer(serializers.HyperlinkedModelSerializer):
     category_id = serializers.IntegerField(write_only=True)
 
-    # >> Relationship serializer.
-    # >> This will display the category object inside the menu object
-    category = CategorySerializer(read_only=True)
+    # >> Relationship serializer: Either we can add a new field and set it to the serializer of the related field. or set depth =1 as a field to display all relations nested in the object
+
+    # 1 >> This will display the category object inside the menu object
+    # category = CategorySerializer(read_only=True)
 
     # >> This will only display the string representatin of the related model
     # category = serializers.StringRelatedField()
+
+    # 2 >> depth = 1 : This is more efficient since you don't have to serialize the related data manaulally
+    # depth = 1
 
     # Specifyinf a method as a serializer field
     price_after_tax = serializers.SerializerMethodField(
