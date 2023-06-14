@@ -1,6 +1,7 @@
 from .models import MenuItem, Category
 from rest_framework import serializers
 from decimal import Decimal
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
 ################ SIMPLE SERIALIZER #################
 
@@ -49,15 +50,30 @@ class MenuItemSerializer(serializers.HyperlinkedModelSerializer):
         fields = ["id", "title", "price", "stock",
                   "price_after_tax", 'category', "category_id"]
 
-        #
+        # Data validation
         extra_kwargs = {
             "price": {
                 "min_value": 2
             },
-            "inventory": {
-                "min_value": 0
+            "stock": {"source": "inventory", "min_value": 0},
+            # Using UniqueValidator to ensure non dublication of title
+            "title": {
+                "validators": [
+                    UniqueValidator(
+                        queryset=MenuItem.objects.all()
+                    )
+                ]
             }
         }
+
+        # Using validate function for data validation
+        def validate(self, attrs):
+            if (attrs['price'] < 2):
+                raise serializers.ValidationError(
+                    'Price should not be less than 2.0')
+            if (attrs['inventory'] < 0):
+                raise serializers.ValidationError('Stock cannot be negative')
+            return super().validate(attrs)
 
     def calculate_tax(self, product: MenuItem):
         return product.price * Decimal(1.1)
