@@ -5,7 +5,7 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-
+from django.core.paginator import Paginator, EmptyPage
 # Create your views here.
 ###################### FUNCTIONS BASED VIRES ####################
 
@@ -16,11 +16,13 @@ def menu_items(request):
         # >> Loading the related models in a single query
         items = MenuItem.objects.select_related('category').all()
 
-        # >> Fetching the query params from the url to implement filtering and searching
+        # >> Fetching the query params from the url to implement filtering, searching, ordering and pagination
         category_name = request.query_params.get('category')
         to_price = request.query_params.get('to_price')
         search = request.query_params.get('search')
         ordering = request.query_params.get('ordering')
+        page = request.query_params.get('page', default=1)
+        perpage = request.query_params.get('perpage', default=2)
 
         # >> Loading items on the basis of query_params
         if category_name:
@@ -39,11 +41,19 @@ def menu_items(request):
             ordering_fields = ordering.split(",")
             items = items.order_by(*ordering_fields)
 
+        # >> Creating a paginator
+        paginator = Paginator(items, per_page=perpage)
+        try:
+            items = paginator.page(number=page)
+        except:
+            items = []
         # >> We pass context when we are using HyperlinkedModelSerializer to display related models as serializers
         serialized_item = MenuItemSerializer(
             items, many=True, context={'request': request})
         # return Response(items.values())
         return Response(serialized_item.data)
+
+    # >> Checking for POST requests
     if request.method == "POST":
         serialized_item = MenuItemSerializer(data=request.data)
         serialized_item.is_valid(raise_exception=True)
