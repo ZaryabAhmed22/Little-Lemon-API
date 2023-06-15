@@ -87,6 +87,16 @@ def category_detail(request, pk):
 def secret(request):
     return Response({"message": "some secret message"})
 
+
+@api_view()
+@permission_classes([IsAuthenticated])
+def manager_view(request):
+    # >> We are checking if the user with the token belongs to manager group only, therefore no other token should display this message
+    if request.user.groups.filter(name="Manager").exists():
+        return Response({"message": "Only Manager Should See This"})
+    else:
+        return Response({"message": "You're not autherized"}, 403)
+
 ####################### CLASS BASED VIEWS #####################
 
 
