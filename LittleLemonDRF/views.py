@@ -128,6 +128,7 @@ class MenuItemsView(generics.ListCreateAPIView, ):
     serializer_class = MenuItemSerializer
     ordering_fields = ["price", "inventory"]
     search_fields = ['title', 'category__title']
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
 
 # >> The generic view RetrieveUpdateDestroy has everything to create a new model item and delete a model item from the database
