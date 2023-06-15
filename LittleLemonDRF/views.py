@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
 # Create your views here.
 ###################### FUNCTIONS BASED VIRES ####################
 
@@ -76,6 +78,14 @@ def category_detail(request, pk):
     category = get_object_or_404(Category, pk=pk)
     serialized_category = CategorySerializer(category)
     return Response(serialized_category.data)
+
+
+# >> Authentication
+@api_view()
+# This will return response for authenticated users only
+@permission_classes([IsAuthenticated])
+def secret(request):
+    return Response({"message": "some secret message"})
 
 ####################### CLASS BASED VIEWS #####################
 
