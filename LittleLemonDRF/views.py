@@ -1,19 +1,21 @@
 from django.shortcuts import render
-from .models import MenuItem, Category
-from .serializers import MenuItemSerializer, CategorySerializer
+from .models import MenuItem, Category, Rating
+from .serializers import MenuItemSerializer, CategorySerializer, RatingSerializer
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from django.contrib.auth.models import User, Group
 # Create your views here.
 ###################### FUNCTIONS BASED VIRES ####################
 
 
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def menu_items(request):
     if request.method == "GET":
         # >> Loading the related models in a single query
@@ -59,18 +61,34 @@ def menu_items(request):
 
     # >> Checking for POST requests
     if request.method == "POST":
-        serialized_item = MenuItemSerializer(data=request.data)
-        serialized_item.is_valid(raise_exception=True)
-        serialized_item.save()
-        return Response(serialized_item.data, status.HTTP_201_CREATED)
+        if request.user.groups.filter(name="Manager").exists():
+            serialized_item = MenuItemSerializer(data=request.data)
+            serialized_item.is_valid(raise_exception=True)
+            serialized_item.save()
+            return Response(serialized_item.data, status.HTTP_201_CREATED)
+        else:
+            return Response({"message": "You're not autherized"}, 403)
 
 
-@api_view()
+@api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
+@permission_classes([IsAuthenticated])
 def single_menu_item(request, id):
     # item = MenuItem.objects.get(pk=id)
-    item = get_object_or_404(MenuItem, pk=id)
-    serialized_item = MenuItemSerializer(item)
-    return Response(serialized_item.data)
+    if request.method == "GET":
+        item = get_object_or_404(MenuItem, pk=id)
+        serialized_item = MenuItemSerializer(item)
+        return Response(serialized_item.data)
+
+    if request.method == "PUT":
+        if request.user.groups.filter(name="Manager").exists():
+            menu_item = get_object_or_404(MenuItem, pk=id)
+            serialized_item = MenuItemSerializer(menu_item, data=request.data)
+            serialized_item.is_valid(raise_exception=True)
+            serialized_item.save()
+            return Response(serialized_item.data, status.HTTP_200_OK)
+
+        else:
+            return Response({"message": "You're not autherized"}, 403)
 
 
 @api_view()
@@ -111,7 +129,24 @@ def throttle_check(request):
 # def throttle_check_auth(request):
 #     return Response({"message": "message for the logged in users only"})
 
+# >> User Management
+# This view is for super admin to add and remove users from manager groups
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def managers(request):
+    username = request.data["username"]
 
+    if username:
+        user = get_object_or_404(User, username=username)
+        managers = Group.objects.get(name="Manager")
+
+        if request.method == "POST":
+            managers.user_set.add(user)
+        elif request.method == "DELETE":
+            managers.user_set.remove(user)
+        return Response({"message": "ok"})
+
+    return Response({"message": "error"}, status.HTTP_400_BAD_REQUEST)
 ####################### CLASS BASED VIEWS #####################
 
 
@@ -135,3 +170,14 @@ class MenuItemsView(generics.ListCreateAPIView, ):
 class SingleMenuItemView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
+
+
+class RatingsView(generics.ListCreateAPIView):
+    queryset = Rating.objects.all()
+    serializer_class = RatingSerializer
+
+    def get_permissions(self):
+        if (self.request.method == 'GET'):
+            return []
+
+        return [IsAuthenticated()]
