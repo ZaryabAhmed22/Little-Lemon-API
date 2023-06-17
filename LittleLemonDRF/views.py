@@ -90,6 +90,25 @@ def single_menu_item(request, id):
         else:
             return Response({"message": "You're not autherized"}, 403)
 
+    if request.method == "DELETE":
+        if request.user.groups.filter(name="Manager").exists():
+            menu_item = get_object_or_404(MenuItem, pk=id)
+            menu_item.delete()
+            return Response({"message": "Item deleted succesfuly"}, status.HTTP_200_OK)
+        else:
+            return Response({"message": "You're not autherized"}, 403)
+
+    if request.method == "DELETE":
+        if request.user.groups.filter(name="Manager").exists():
+            menu_item = get_object_or_404(MenuItem, pk=id)
+            serialized_item = MenuItemSerializer(menu_item, data=request.data)
+            serialized_item.is_valid(raise_exception=True)
+            serialized_item.save()
+            return Response(serialized_item.data, status.HTTP_200_OK)
+
+        else:
+            return Response({"message": "You're not autherized"}, 403)
+
 
 @api_view()
 def category_detail(request, pk):
