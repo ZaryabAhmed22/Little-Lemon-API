@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .models import MenuItem, Category, Rating
-from .serializers import MenuItemSerializer, CategorySerializer, RatingSerializer
+from .models import MenuItem, Category, Rating, Cart
+from .serializers import MenuItemSerializer, CategorySerializer, RatingSerializer, CartSerializer
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
@@ -98,7 +98,7 @@ def single_menu_item(request, id):
         else:
             return Response({"message": "You're not autherized"}, 403)
 
-    if request.method == "DELETE":
+    if request.method == "PATCH":
         if request.user.groups.filter(name="Manager").exists():
             menu_item = get_object_or_404(MenuItem, pk=id)
             serialized_item = MenuItemSerializer(menu_item, data=request.data)
@@ -117,7 +117,48 @@ def category_detail(request, pk):
     return Response(serialized_category.data)
 
 
-# >> Authentication
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def cart(request):
+    if request.method == "GET":
+        cart_items = Cart.objects.select_related('user').all()
+        serialized_items = CartSerializer(
+            cart_items, many=True)
+        # return Response(items.values())
+        return Response(serialized_items.data, status=status.HTTP_200_OK)
+
+    if request.method == "POST":
+        menuitem_id = request.data.get('menuitem_id')
+        quantity = request.data.get('quantity')
+        menuitem = get_object_or_404(MenuItem, pk=menuitem_id)
+
+        if not menuitem_id or not quantity:
+            return Response({'error': 'menuitem_id and quantity are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create or update cart item
+        cart_item, created = Cart.objects.get_or_create(
+            user=request.user,
+            menuitem=menuitem,
+            defaults={
+                'quantity': quantity,
+                'unit_price': menuitem.price,
+                'price': int(quantity) * (menuitem.price)
+            }
+        )
+
+        if not created:
+            cart_item.quantity = quantity
+            cart_item.price = int(quantity) * menuitem.price
+            # cart_item.save()
+
+        serialized_item = CartSerializer(cart_item, data=request.data)
+        serialized_item.is_valid(raise_exception=True)
+        serialized_item.save()
+        return Response(serialized_item.data, status.HTTP_201_CREATED)
+
+    # >> Authentication
+
+
 @api_view()
 # This will return response for authenticated users only
 @permission_classes([IsAuthenticated])

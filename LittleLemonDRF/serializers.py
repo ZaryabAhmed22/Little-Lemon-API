@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework.validators import UniqueTogetherValidator
 from .models import Rating
-from .models import MenuItem, Category
+from .models import MenuItem, Category, Rating, Cart
 from rest_framework import serializers
 from decimal import Decimal
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
@@ -102,3 +102,70 @@ class RatingSerializer (serializers.ModelSerializer):
     extra_kwargs = {
         'rating': {'min_value': 0, 'max_value': 5},
     }
+
+
+# class CartSerializer(serializers.ModelSerializer):
+#     user = serializers.PrimaryKeyRelatedField(
+#         queryset=User.objects.all(),
+#         default=serializers.CurrentUserDefault()
+#     )
+
+#     menuitem = serializers.PrimaryKeyRelatedField(
+#         queryset=MenuItem.objects.all()
+#     )
+
+#     unit_price = serializers.DecimalField(
+#         max_digits=6,
+#         decimal_places=2,
+#         read_only=True
+#     )
+
+#     # Specifyinf a method as a serializer field
+#     # price = serializers.SerializerMethodField(
+#     #     method_name="calculate_total_price")
+
+#     class Meta:
+#         model = Cart
+#         fields = ['user', 'menuitem', 'quantity', 'unit_price', 'price']
+
+#     def get_unit_price(self, menuitem):
+#         # Retrieve the unit price from the related menu item
+#         return menuitem.unit_price
+
+#     # def calculate_total_price(self, product: MenuItem,  cart: Cart):
+#     #     return Decimal(self.menu_item.price) * cart.quantity
+
+#     def calculate_price(self, validated_data):
+#         quantity = validated_data['quantity']
+#         unit_price = validated_data['unit_price']
+#         return quantity * unit_price
+
+#     def create(self, validated_data):
+#         menuitem = validated_data['menuitem']
+#         validated_data['unit_price'] = self.get_unit_price(menuitem)
+#         validated_data['user'] = self.context['request'].user
+#         validated_data['price'] = self.calculate_price(validated_data)
+#         return super().create(validated_data)
+class CartSerializer(serializers.ModelSerializer):
+    menuitem_title = serializers.CharField(
+        source='menuitem.title', read_only=True)
+    menuitem_price = serializers.DecimalField(
+        source='menuitem.price', max_digits=6, decimal_places=2, read_only=True)
+    menuitem_inventory = serializers.IntegerField(
+        source='menuitem.inventory', read_only=True)
+
+    class Meta:
+        model = Cart
+        fields = ('id', 'user', 'menuitem', 'menuitem_title', 'menuitem_price',
+                  'menuitem_inventory', 'quantity', 'price')
+        read_only_fields = ('id', 'user', 'menuitem_title',
+                            'menuitem_price', 'menuitem_inventory', 'price')
+
+    def calculate_price(self, validated_data):
+        quantity = validated_data['quantity']
+        unit_price = validated_data['unit_price']
+        return quantity * unit_price
+
+    def create(self, validated_data):
+        validated_data['price'] = self.calculate_price(validated_data)
+        return super().create(validated_data)
