@@ -117,7 +117,7 @@ def category_detail(request, pk):
     return Response(serialized_category.data)
 
 
-@api_view(['GET', 'POST'])
+@api_view(['GET', 'POST', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def cart(request):
     if request.method == "GET":
@@ -156,7 +156,13 @@ def cart(request):
         serialized_item.save()
         return Response(serialized_item.data, status.HTTP_201_CREATED)
 
-    # >> Authentication
+    if request.method == "DELETE":
+        cart_items = Cart.objects.select_related('user').all()
+        cart_items.delete()
+        return Response({"message": "successfully deleted all items"}, status=status.HTTP_200_OK)
+
+
+# >> Authentication
 
 
 @api_view()
