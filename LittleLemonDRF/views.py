@@ -11,7 +11,11 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from django.contrib.auth.models import User, Group
 # Create your views here.
-###################### FUNCTIONS BASED VIRES ####################
+###################### FUNCTIONS BASED VIWES ####################
+
+
+def index(request):
+    return render(request, 'index.html', {})
 
 
 @api_view(['GET', 'POST'])
