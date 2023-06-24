@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .models import MenuItem, Category, Rating, Cart
-from .serializers import MenuItemSerializer, CategorySerializer, RatingSerializer, CartSerializer
+from .models import MenuItem, Category, Rating, Cart, Booking
+from .serializers import MenuItemSerializer, CategorySerializer, RatingSerializer, CartSerializer, BookingSerializer
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
@@ -10,6 +10,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from django.contrib.auth.models import User, Group
+
 # Create your views here.
 ###################### FUNCTIONS BASED VIWES ####################
 
@@ -251,3 +252,9 @@ class RatingsView(generics.ListCreateAPIView):
             return []
 
         return [IsAuthenticated()]
+
+
+class BookingView(generics.ListCreateAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]

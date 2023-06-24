@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework.validators import UniqueTogetherValidator
 from .models import Rating
-from .models import MenuItem, Category, Rating, Cart
+from .models import MenuItem, Category, Rating, Cart, Booking
 from rest_framework import serializers
 from decimal import Decimal
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
@@ -80,6 +80,12 @@ class MenuItemSerializer(serializers.HyperlinkedModelSerializer):
 
     def calculate_tax(self, product: MenuItem):
         return product.price * Decimal(1.1)
+
+
+class BookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = []
 
 
 class RatingSerializer (serializers.ModelSerializer):

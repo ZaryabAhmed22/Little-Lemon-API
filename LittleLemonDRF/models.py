@@ -1,7 +1,6 @@
-from django.db import models
 
-# Create your models here.
 from django.db import models
+from django.core.validators import MinLengthValidator, MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import User
 
 # Create your models here.
@@ -65,3 +64,13 @@ class OrderItem(models.Model):
     # one order item will have one menuitem
     class Meta:
         unique_together = ('order', 'menuitem')
+
+
+class Booking(models.Model):
+    name = models.CharField(max_length=150, validators=[MinLengthValidator(5)])
+    no_of_guests = models.IntegerField(
+        validators=[MinValueValidator(2), MaxValueValidator(6)])
+    booking_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.name}, {self.no_of_guests} guests'
